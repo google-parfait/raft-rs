@@ -11,7 +11,8 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use std::{str, thread};
 
-use protobuf::Message as PbMessage;
+#[cfg(feature = "protobuf-codec")]
+use protobuf::Message as _;
 use raft::storage::MemStorage;
 use raft::{prelude::*, StateRole};
 use regex::Regex;

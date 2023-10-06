@@ -9,34 +9,40 @@ readme = "README.md"
 homepage = "https://github.com/tikv/raft-rs"
 documentation = "https://docs.rs/raft"
 description = "The rust language implementation of Raft algorithm."
-categories = ["algorithms", "database-implementations"]
+categories = ["algorithms", "database-implementations", "no-std"]
 edition = "2021"
 
 [workspace]
 members = ["proto", "harness", "datadriven"]
 
 [features]
-default = ["protobuf-codec", "default-logger"]
+default = ["protobuf-codec", "default-logger", "std"]
+std = ["thiserror", "fxhash", "raft-proto/std"]
 # Enable failpoints
 failpoints = ["fail/failpoints"]
-protobuf-codec = ["raft-proto/protobuf-codec", "bytes"]
-prost-codec = ["raft-proto/prost-codec"]
+protobuf-codec = ["raft-proto/protobuf-codec", "raft-proto/std", "bytes", "protobuf"]
+prost-codec = ["raft-proto/prost-codec", "prost"]
 default-logger = ["slog-stdlog", "slog-envlogger", "slog-term"]
 
 # Make sure to synchronize updates with Harness.
 [dependencies]
-bytes = { version = "1", optional = true }
-fxhash = "0.2.1"
+bytes = { version = "1", optional = true, default-features = false }
+fxhash = { version = "0.2.1", optional = true }
+ahash = { version = "0.8.3", default-features = false }
 fail = { version = "0.4", optional = true }
 getset = "0.1.1"
-protobuf = "2"
-thiserror = "1.0"
+protobuf = { version = "2", optional = true }
+prost = { version = "0.11", optional = true, default-features = false, features = ["prost-derive"] }
+thiserror = { version = "1.0", optional = true }
 raft-proto = { path = "proto", version = "0.7.0", default-features = false }
-rand = "0.8"
-slog = "2.2"
+rand = { version = "0.8", default-features = false, features = ["alloc", "small_rng", "getrandom"] }
+getrandom = { version = "0.2.10", default-features = false, features = ["rdrand"] }
+slog = { version = "2.2", default-features = false }
 slog-envlogger = { version = "2.1.0", optional = true }
 slog-stdlog = { version = "4", optional = true }
 slog-term = { version = "2.4.0", optional = true }
+spin = { version = "0.9.8"}
+hashbrown = { version = "0.14.0"}
 
 [dev-dependencies]
 criterion = "0.3"

@@ -3,7 +3,9 @@
 // We use `default` method a lot to be support prost and rust-protobuf at the
 // same time. And reassignment can be optimized by compiler.
 #![allow(clippy::field_reassign_with_default)]
+#![cfg_attr(not(feature = "std"), no_std)]
 
+extern crate alloc;
 mod confchange;
 mod confstate;
 
@@ -19,6 +21,19 @@ pub use crate::protos::eraftpb;
 #[allow(renamed_and_removed_lints)]
 #[allow(bare_trait_objects)]
 mod protos {
+
+    #[cfg(feature = "prost-codec")]
+    pub mod eraftpb {
+
+        use core::concat;
+        use core::env;
+        use core::include;
+
+        include!(concat!(env!("OUT_DIR"), "/protos/eraftpb.rs"));
+        include!("wrappers.rs");
+    }
+
+    #[cfg(feature = "protobuf-codec")]
     include!(concat!(env!("OUT_DIR"), "/protos/mod.rs"));
 
     use self::eraftpb::Snapshot;
@@ -40,6 +55,8 @@ pub mod prelude {
 
 pub mod util {
     use crate::eraftpb::ConfState;
+    use core::convert::From;
+    use core::iter::IntoIterator;
 
     impl<Iter1, Iter2> From<(Iter1, Iter2)> for ConfState
     where

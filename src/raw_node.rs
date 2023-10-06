@@ -20,9 +20,13 @@
 //! nodes but not the raft consensus itself. Generally, you'll interact with the
 //! RawNode first and use it to access the inner workings of the consensus protocol.
 
-use std::{collections::VecDeque, mem};
+use alloc::collections::VecDeque;
+use alloc::vec;
+use alloc::vec::Vec;
+use core::mem;
 
-use protobuf::Message as PbMessage;
+#[cfg(feature = "protobuf-codec")]
+use protobuf::Message as _;
 use raft_proto::ConfChangeI;
 use slog::Logger;
 
@@ -798,6 +802,7 @@ impl<T: Storage> RawNode<T> {
 #[cfg(test)]
 mod test {
     use crate::eraftpb::MessageType;
+    use alloc::vec;
 
     use super::is_local_msg;
 
