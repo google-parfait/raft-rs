@@ -14,6 +14,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// This is necessary to support prost and rust-protobuf at the same time.
+#![allow(clippy::useless_conversion)]
+
 use harness::*;
 use raft::eraftpb::*;
 use raft::storage::MemStorage;
@@ -130,7 +133,7 @@ pub const SOME_DATA: Option<&'static str> = Some("somedata");
 
 pub fn new_message_with_entries(from: u64, to: u64, ty: MessageType, ents: Vec<Entry>) -> Message {
     let mut m = Message {
-        msg_type: ty,
+        msg_type: ty.into(),
         to,
         from,
         ..Default::default()
@@ -179,7 +182,7 @@ pub fn new_snapshot(index: u64, term: u64, voters: Vec<u64>) -> Snapshot {
 
 pub fn conf_change(ty: ConfChangeType, node_id: u64) -> ConfChange {
     ConfChange {
-        change_type: ty,
+        change_type: ty.into(),
         node_id,
         ..Default::default()
     }

@@ -15,6 +15,7 @@
 // limitations under the License.
 
 use harness::Network;
+#[cfg(feature = "protobuf-codec")]
 use protobuf::{Message as PbMessage, ProtobufEnum as _};
 use raft::eraftpb::*;
 use raft::storage::{GetEntriesContext, MemStorage};
@@ -887,7 +888,7 @@ fn prepare_async_entries(raw_node: &mut RawNode<MemStorage>, s: &MemStorage) {
     // election, and the first proposal (only one proposal gets sent
     // because we're in probe state).
     assert_eq!(msgs.len(), 1);
-    assert_eq!(msgs[0].msg_type, MessageType::MsgAppend);
+    assert_eq!(msgs[0].get_msg_type(), MessageType::MsgAppend);
     assert_eq!(msgs[0].entries.len(), 2);
     let _ = raw_node.advance_append(rd);
 
@@ -928,7 +929,7 @@ fn test_raw_node_with_async_entries() {
     s.wl().append(&entries).unwrap();
     let msgs = rd.messages();
     assert_eq!(msgs.len(), 5);
-    assert_eq!(msgs[0].msg_type, MessageType::MsgAppend);
+    assert_eq!(msgs[0].get_msg_type(), MessageType::MsgAppend);
     assert_eq!(msgs[0].entries.len(), 2);
     let _ = raw_node.advance_append(rd);
 }
@@ -1014,7 +1015,7 @@ fn test_raw_node_async_entries_with_leader_change() {
     // election, and the first proposal (only one proposal gets sent
     // because we're in probe state).
     assert_eq!(msgs.len(), 1);
-    assert_eq!(msgs[0].msg_type, MessageType::MsgAppend);
+    assert_eq!(msgs[0].get_msg_type(), MessageType::MsgAppend);
     assert_eq!(msgs[0].entries.len(), 2);
     let _ = raw_node.advance_append(rd);
 
@@ -1846,7 +1847,7 @@ fn test_committed_entries_pagination_after_restart() {
     let (mut entries, mut size) = (vec![], 0);
     for i in 2..=10 {
         let e = new_entry(1, i, Some("test data"));
-        size += e.compute_size() as u64;
+        size += raft::util::compute_size(&e) as u64;
         entries.push(e);
     }
     s.inner.wl().append(&entries).unwrap();

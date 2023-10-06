@@ -19,6 +19,7 @@ use std::collections::HashMap;
 use std::panic::{self, AssertUnwindSafe};
 
 use harness::*;
+#[cfg(feature = "protobuf-codec")]
 use protobuf::Message as PbMessage;
 use raft::eraftpb::*;
 use raft::storage::{GetEntriesContext, MemStorage};
@@ -397,7 +398,7 @@ fn test_progress_flow_control() {
     // election, and the first proposal (only one proposal gets sent
     // because we're in probe state).
     assert_eq!(ms.len(), 1);
-    assert_eq!(ms[0].msg_type, MessageType::MsgAppend);
+    assert_eq!(ms[0].get_msg_type(), MessageType::MsgAppend);
     assert_eq!(ms[0].entries.len(), 2);
     assert_eq!(ms[0].entries[0].data.len(), 0);
     assert_eq!(ms[0].entries[1].data.len(), 1000);
@@ -410,7 +411,7 @@ fn test_progress_flow_control() {
     ms = r.read_messages();
     assert_eq!(ms.len(), 3);
     for (i, m) in ms.iter().enumerate() {
-        if m.msg_type != MessageType::MsgAppend {
+        if m.get_msg_type() != MessageType::MsgAppend {
             panic!("{}: expected MsgAppend, got {:?}", i, m.msg_type);
         }
         if m.entries.len() != 2 {
@@ -426,7 +427,7 @@ fn test_progress_flow_control() {
     ms = r.read_messages();
     assert_eq!(ms.len(), 2);
     for (i, m) in ms.iter().enumerate() {
-        if m.msg_type != MessageType::MsgAppend {
+        if m.get_msg_type() != MessageType::MsgAppend {
             panic!("{}: expected MsgAppend, got {:?}", i, m.msg_type);
         }
     }
@@ -3336,7 +3337,7 @@ fn test_commit_after_remove_node() -> Result<()> {
     let ents = next_ents(&mut r, &s);
     assert_eq!(ents.len(), 1);
     assert_eq!(ents[0].get_entry_type(), EntryType::EntryNormal);
-    assert_eq!(ents[0].data.as_ref(), b"hello");
+    assert_eq!(ents[0].get_data(), b"hello");
 
     Ok(())
 }
@@ -4452,7 +4453,7 @@ fn test_conf_change_check_before_campaign() {
     let mut cc = ConfChange::default();
     cc.set_change_type(ConfChangeType::RemoveNode);
     cc.node_id = 3;
-    e.data = protobuf::Message::write_to_bytes(&cc).unwrap().into();
+    e.data = cc.write_to_bytes().unwrap().into();
     m.mut_entries().push(e);
     nt.send(vec![m]);
 

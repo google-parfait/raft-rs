@@ -1,10 +1,22 @@
 // Copyright 2020 TiKV Project Authors. Licensed under Apache-2.0.
 
+extern crate alloc;
+
 use crate::eraftpb::{
     ConfChange, ConfChangeSingle, ConfChangeTransition, ConfChangeType, ConfChangeV2,
 };
-use std::borrow::Cow;
-use std::fmt::Write;
+use alloc::borrow::Cow;
+use alloc::format;
+use alloc::string::String;
+use alloc::vec;
+use alloc::vec::Vec;
+use core::fmt::Write;
+use core::iter::Iterator;
+use core::option::Option;
+use core::option::Option::{None, Some};
+use core::result::Result;
+use core::result::Result::{Err, Ok};
+use core::write;
 
 /// Creates a `ConfChangeSingle`.
 pub fn new_conf_change_single(node_id: u64, ty: ConfChangeType) -> ConfChangeSingle {

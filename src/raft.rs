@@ -14,17 +14,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::cmp;
-use std::convert::TryFrom;
-use std::ops::{Deref, DerefMut};
+use alloc::vec::Vec;
+use core::cmp;
+use core::convert::TryFrom;
+use core::ops::{Deref, DerefMut};
+use rand::rngs::SmallRng;
 
 use crate::eraftpb::{
     ConfChange, ConfChangeV2, ConfState, Entry, EntryType, HardState, Message, MessageType,
     Snapshot,
 };
+#[cfg(feature = "protobuf-codec")]
 use protobuf::Message as _;
 use raft_proto::ConfChangeI;
-use rand::{self, Rng};
+use rand::{self, Rng, SeedableRng};
 use slog::{self, Logger};
 
 #[cfg(feature = "failpoints")]
@@ -256,6 +259,8 @@ pub struct RaftCore<T: Storage> {
 
     /// Max size per committed entries in a `Read`.
     pub(crate) max_committed_size_per_ready: u64,
+
+    random: SmallRng,
 }
 
 /// A struct that represents the raft consensus itself. Stores details concerning the current
@@ -364,6 +369,7 @@ impl<T: Storage> Raft<T> {
                     last_log_tail_index: 0,
                 },
                 max_committed_size_per_ready: c.max_committed_size_per_ready,
+                random: SmallRng::from_entropy(),
             },
         };
         confchange::restore(&mut r.prs, r.r.raft_log.last_index(), conf_state)?;
@@ -874,7 +880,7 @@ impl<T: Storage> Raft<T> {
     pub fn inflight_buffers_size(&self) -> usize {
         let mut total_size = 0;
         for (_, pr) in self.prs().iter() {
-            total_size += pr.ins.buffer_capacity() * std::mem::size_of::<u64>();
+            total_size += pr.ins.buffer_capacity() * core::mem::size_of::<u64>();
         }
         total_size
     }
@@ -1627,7 +1633,7 @@ impl<T: Storage> Raft<T> {
             // the rejection's log term. If a probe at one of these indexes
             // succeeded, its log term at that index would match the leader's,
             // i.e. 3 or 5 in this example. But the follower already told the
-            // leader that it is still at term 2 at index 6, and since the
+            // leader that it is still at term 2 at index 9, and since the
             // log term only ever goes up (within a log), this is a contradiction.
             //
             // At index 1, however, the leader can draw no such conclusion,
@@ -2801,8 +2807,12 @@ impl<T: Storage> Raft<T> {
     /// Regenerates and stores the election timeout.
     pub fn reset_randomized_election_timeout(&mut self) {
         let prev_timeout = self.randomized_election_timeout;
-        let timeout =
-            rand::thread_rng().gen_range(self.min_election_timeout..self.max_election_timeout);
+
+        let timeout = self
+            .r
+            .random
+            .gen_range(self.min_election_timeout..self.max_election_timeout);
+
         debug!(
             self.logger,
             "reset election timeout {prev_timeout} -> {timeout} at {election_elapsed}",
