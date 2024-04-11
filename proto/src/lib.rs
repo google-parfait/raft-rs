@@ -55,8 +55,6 @@ pub mod prelude {
 
 pub mod util {
     use crate::eraftpb::ConfState;
-    use core::convert::From;
-    use core::iter::IntoIterator;
 
     impl<Iter1, Iter2> From<(Iter1, Iter2)> for ConfState
     where

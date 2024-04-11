@@ -1,5 +1,5 @@
 // Copyright 2020 TiKV Project Authors. Licensed under Apache-2.0.
-
+#![allow(unused_imports)]
 extern crate alloc;
 
 use crate::eraftpb::{
@@ -11,11 +11,6 @@ use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
 use core::fmt::Write;
-use core::iter::Iterator;
-use core::option::Option;
-use core::option::Option::{None, Some};
-use core::result::Result;
-use core::result::Result::{Err, Ok};
 use core::write;
 
 /// Creates a `ConfChangeSingle`.

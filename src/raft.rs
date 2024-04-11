@@ -16,7 +16,6 @@
 
 use alloc::vec::Vec;
 use core::cmp;
-use core::convert::TryFrom;
 use core::ops::{Deref, DerefMut};
 use rand::rngs::SmallRng;
 
@@ -27,8 +26,8 @@ use crate::eraftpb::{
 #[cfg(feature = "protobuf-codec")]
 use protobuf::Message as _;
 use raft_proto::ConfChangeI;
-use rand::{self, Rng, SeedableRng};
-use slog::{self, Logger};
+use rand::{Rng, SeedableRng};
+use slog::Logger;
 
 #[cfg(feature = "failpoints")]
 use fail::fail_point;
@@ -289,10 +288,6 @@ impl<T: Storage> DerefMut for Raft<T> {
         &mut self.r
     }
 }
-
-trait AssertSend: Send {}
-
-impl<T: Storage + Send> AssertSend for Raft<T> {}
 
 fn new_message(to: u64, field_type: MessageType, from: Option<u64>) -> Message {
     let mut m = Message::default();

@@ -668,6 +668,8 @@ impl<T: Storage> RaftLog<T> {
 
 #[cfg(test)]
 mod test {
+    #![allow(clippy::useless_vec)]
+
     use alloc::vec;
 
     use crate::default_logger;
