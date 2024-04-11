@@ -17,7 +17,7 @@
 use alloc::borrow::ToOwned;
 use alloc::format;
 
-pub use super::read_only::{ReadOnlyOption, ReadState};
+pub use super::read_only::ReadOnlyOption;
 use super::util::NO_LIMIT;
 use super::{
     errors::{Error, Result},

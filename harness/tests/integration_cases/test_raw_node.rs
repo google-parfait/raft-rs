@@ -18,7 +18,7 @@ use harness::Network;
 #[cfg(feature = "protobuf-codec")]
 use protobuf::{Message as PbMessage, ProtobufEnum as _};
 use raft::eraftpb::*;
-use raft::storage::{GetEntriesContext, MemStorage};
+use raft::storage::MemStorage;
 use raft::*;
 use raft_proto::*;
 use slog::Logger;
@@ -174,6 +174,11 @@ fn test_raw_node_read_index_to_old_leader() {
     );
 }
 
+fn sort_conf_state_collections(cs: &mut ConfState) {
+    cs.voters.sort();
+    cs.learners.sort();
+}
+
 /// Tests the configuration change mechanism. Each test case sends a configuration
 /// change which is either simple or joint, verifies that it applies and that the
 /// resulting ConfState matches expectations, and for joint configurations makes
@@ -251,7 +256,7 @@ fn test_raw_node_propose_and_conf_change() {
     let cs = conf_state_v2(vec![2], vec![3], vec![1], vec![1], true);
     test_cases.push((Box::new(cc), cs, Some(conf_state(vec![2], vec![1, 3]))));
 
-    for (cc, exp, exp2) in test_cases {
+    for (cc, mut exp, exp2) in test_cases {
         let s = new_storage();
         let mut raw_node = new_raw_node(1, vec![1], 10, 1, s.clone(), &l);
         raw_node.campaign().unwrap();
@@ -321,7 +326,10 @@ fn test_raw_node_propose_and_conf_change() {
             assert_eq!(entries[1].get_entry_type(), EntryType::EntryConfChangeV2);
         }
         assert_eq!(ccdata, entries[1].get_data());
-        assert_eq!(exp, cs.unwrap());
+        let mut cs = cs.unwrap();
+        sort_conf_state_collections(&mut cs);
+        sort_conf_state_collections(&mut exp);
+        assert_eq!(exp, cs);
 
         let conf_index = if cc.as_v2().enter_joint() == Some(true) {
             // If this is an auto-leaving joint conf change, it will have
@@ -366,8 +374,11 @@ fn test_raw_node_propose_and_conf_change() {
         assert_eq!(context, leave_cc.get_context(), "{:?}", cc.as_v2());
         // Lie and pretend the ConfChange applied. It won't do so because now
         // we require the joint quorum and we're only running one node.
-        let cs = raw_node.apply_conf_change(&leave_cc).unwrap();
-        assert_eq!(cs, exp2.unwrap());
+        let mut cs = raw_node.apply_conf_change(&leave_cc).unwrap();
+        let mut exp2 = exp2.unwrap();
+        sort_conf_state_collections(&mut cs);
+        sort_conf_state_collections(&mut exp2);
+        assert_eq!(cs, exp2);
     }
 }
 

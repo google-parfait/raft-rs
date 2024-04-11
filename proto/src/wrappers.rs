@@ -1,5 +1,6 @@
 // Generated file, modified and added to support no_std
 
+#[allow(deprecated)]
 impl Entry {
     #[inline]
     pub fn default_ref() -> &'static Self {
@@ -220,6 +221,7 @@ impl Snapshot {
             .unwrap_or_else(SnapshotMetadata::default)
     }
 }
+#[allow(deprecated)]
 impl Message {
     pub fn new() -> Self {
         Self::default()
@@ -604,6 +606,7 @@ impl ConfState {
         self.auto_leave
     }
 }
+#[allow(deprecated)]
 impl ConfChange {
     pub fn write_to_bytes(
         &self,
@@ -683,6 +686,7 @@ impl ConfChange {
         self.id
     }
 }
+#[allow(deprecated)]
 impl ConfChangeSingle {
     #[inline]
     pub fn default_ref() -> &'static Self {
@@ -715,6 +719,7 @@ impl ConfChangeSingle {
         self.node_id
     }
 }
+#[allow(deprecated)]
 impl ConfChangeV2 {
     pub fn write_to_bytes(
         &self,

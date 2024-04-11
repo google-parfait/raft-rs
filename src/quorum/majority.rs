@@ -20,15 +20,13 @@ pub struct Configuration {
 
 impl core::fmt::Display for Configuration {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
-        write!(
-            f,
-            "({})",
-            self.voters
-                .iter()
-                .map(|x| x.to_string())
-                .collect::<Vec<String>>()
-                .join(" ")
-        )
+        let mut voters = self
+            .voters
+            .iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<String>>();
+        voters.sort();
+        write!(f, "({})", voters.join(" "))
     }
 }
 
